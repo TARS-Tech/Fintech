@@ -3,6 +3,7 @@ import Screen from "../../components/common/Screen";
 import AppText from "../../components/common/AppText";
 import AppButton from "../../components/common/AppButton";
 import {
+  Alert,
   Dimensions,
   FlatList,
   StyleSheet,
@@ -47,9 +48,13 @@ export default function RegisterScreen() {
             autoOtp: res.data?.otp || res.otp,
           }
         );
+      } else {
+        Alert.alert("Registration Failed", res.message || "Unable to send OTP. Please try again.");
       }
     } catch (error) {
       console.log("Error sending OTP:", error);
+      const msg = error.response?.data?.message || error.message || "Network request failed. Please check your internet connection.";
+      Alert.alert("Connection Error", msg);
     } finally {
       setLoading(false);
     }
