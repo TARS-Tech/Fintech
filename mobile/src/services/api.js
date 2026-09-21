@@ -1,8 +1,10 @@
 import axios from "axios";
 
+const BACKEND_URL = "https://fintech-ow83.onrender.com/api";
+
 const api = axios.create({
-  baseURL: "http://192.168.1.4:5000/api",
-  timeout: 10000,
+  baseURL: BACKEND_URL,
+  timeout: 15000,
 });
 
 export default api;
