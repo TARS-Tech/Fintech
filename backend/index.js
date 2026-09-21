@@ -54,12 +54,39 @@ mongoose
   })
   .catch(console.error);
 
+// Health check endpoint for uptime monitoring & Render keep-alive
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Finpilot API Running",
   });
 });
+
+// Self-ping service to prevent Render free tier from sleeping (inactivity timeout is 15 minutes)
+const keepAliveUrl = process.env.RENDER_EXTERNAL_URL || process.env.SERVER_URL;
+if (keepAliveUrl) {
+  const PING_INTERVAL_MS = (parseInt(process.env.PING_INTERVAL_MINUTES, 10) || 14) * 60 * 1000;
+  setInterval(() => {
+    const healthUrl = `${keepAliveUrl.replace(/\/$/, "")}/api/health`;
+    const client = healthUrl.startsWith("https") ? require("https") : require("http");
+    
+    client.get(healthUrl, (res) => {
+      console.log(`[Keep-Alive] Pinged ${healthUrl} - Status: ${res.statusCode}`);
+    }).on("error", (err) => {
+      console.error("[Keep-Alive] Error pinging health URL:", err.message);
+    });
+  }, PING_INTERVAL_MS);
+  
+  console.log(`[Keep-Alive] Configured to ping ${keepAliveUrl} every ${PING_INTERVAL_MS / 60000} mins`);
+}
 
 module.exports = app;
 
