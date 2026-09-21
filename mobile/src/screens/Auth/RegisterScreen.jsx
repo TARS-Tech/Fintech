@@ -29,23 +29,37 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
-    // console.log("button click")
+    const cleanPhone = phone.replace(/\D/g, "").slice(-10);
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      Alert.alert("Invalid Phone Number", "Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await sendOtp({
-        email,
-        phone
+        email: cleanEmail,
+        phone: cleanPhone,
       });
 
-      console.log("res for otp:", res)
+      console.log("res for otp:", res);
 
-      if (res.success) {
+      const receivedOtp = res.data?.otp || res.otp;
+
+      if (res.success && receivedOtp) {
         navigation.navigate(
           "VerificationCode",
           {
-            phone,
-            email,
-            autoOtp: res.data?.otp || res.otp,
+            phone: cleanPhone,
+            email: cleanEmail,
+            autoOtp: String(receivedOtp),
           }
         );
       } else {
@@ -58,7 +72,7 @@ export default function RegisterScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  };
   return (
     <Screen style={styles.container}>
       <View style={{ marginTop: 40 }}>
